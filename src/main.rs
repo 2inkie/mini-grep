@@ -1,4 +1,33 @@
-use std::{fs, env};
+use std::{env, fs, process};
+use std::error::Error;
+
+struct Config {
+    query: String,
+    filename: String,
+}
+
+impl Config {
+    fn build(args: &[String]) -> Result<Config, &'static str> {
+        if args.len() != 3 {
+            return Err("Not enough arguments - usage: mini_grep <query> <filename>");
+        }
+        let query = args[1].clone();
+        let filename = args[2].clone();
+        Ok(Config { query, filename })
+    }
+}
+
+fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    println!("Searching for '{}' in file '{}'", config.query, config.filename);
+
+    let filepath = "./files/".to_string();
+    let file = filepath + &config.filename;
+
+    let contents = fs::read_to_string(file)?;
+
+    search_in_file(&config.query, &contents);
+    Ok(())
+}
 
 fn search_in_file(query: &str, file_contents: &str) {
     for line in file_contents.lines() {
@@ -7,29 +36,16 @@ fn search_in_file(query: &str, file_contents: &str) {
         }
     }
 }
-fn main(){
-    let filepath = "./files/".to_string();
-
+fn main() {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() != 3 {
-        eprintln!("Usage: {} <query> <filename>", args[0]);
-        return;
+    let config = Config::build(&args).unwrap_or_else(|err| {
+        eprintln!("Problem parsing arguments: {}", err);
+        process::exit(1);
+    });
+
+    if let Err(e) = run(config) {
+        eprintln!("App error: {}", e);
+        process::exit(1);
     }
-
-    let input_args = &args[1..3].to_vec();
-
-    let file = filepath + input_args[1].trim();
-
-    let contents = match fs::read_to_string(&file) {
-        Ok(text) => text,
-
-        Err(e) => {
-            panic!("Error reading file '{}': {}", file, e);
-        }
-    };
-
-    let query = input_args[0].trim();
-    search_in_file(query, &contents);
-
 }
