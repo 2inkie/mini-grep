@@ -9,7 +9,7 @@ struct Config {
 
 impl Config {
     fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() != 4 {
+        if args.len() != 3 {
             return Err("Not enough arguments - usage: mini_grep <query> <filename>");
         }
         let query = args[1].clone();
@@ -39,7 +39,8 @@ fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 }
 
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let contents = fs::read_to_string(&config.filename)?;
+    let filepath = "./files/".to_string();
+    let contents = fs::read_to_string(filepath + &config.filename)?;
 
     let results = if config.case_sensitive {
         search_case_sensitive(&config.query, &contents)
